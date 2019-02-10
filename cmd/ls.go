@@ -145,6 +145,18 @@ func (a ArchiveInfos) Matches(fn ArchiveInfoMatchesFn) ArchiveInfos {
 	return archives
 }
 
+func (a ArchiveInfos) Len() int {
+	return len(a)
+}
+
+func (a ArchiveInfos) Size() int {
+	n := 0
+	for _, ai := range a {
+		n += ai.Filesize
+	}
+	return n
+}
+
 func ArchivesOverlap(start, end time.Time) ArchiveInfoMatchesFn {
 	return func(ai *ArchiveInfo) bool {
 		return ai.Overlaps(start, end)
