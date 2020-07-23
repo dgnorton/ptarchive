@@ -104,7 +104,9 @@ func runCp(cmd *cobra.Command, args []string) {
 	archives := getArchiveList()
 	archives = archives.Matches(ArchivesOverlap(start, end))
 
-	fmt.Printf("found %d matching archive files totalling %d bytes\n", archives.Len(), archives.Size())
+	sz, err := archives.Size()
+	checkm("getting archives' size", err)
+	fmt.Printf("found %d matching archive files totalling %d bytes\n", archives.Len(), sz)
 
 	if archives.Len() == 0 {
 		return

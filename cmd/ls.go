@@ -20,6 +20,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -65,21 +66,22 @@ func getArchiveList() ArchiveInfos {
 
 	url := "https://papertrailapp.com/api/v1/archives.json"
 	req, err := http.NewRequest("GET", url, nil)
-	check(err)
+	checkm("getting archive list: new request", err)
 	req.Header.Set("X-Papertrail-Token", tok)
 
 	c := &http.Client{}
 	resp, err := c.Do(req)
-	check(err)
+	checkm("getting archive list: making HTTP request", err)
 	checkHTTP(resp, req)
 	defer resp.Body.Close()
 
 	b, err := ioutil.ReadAll(resp.Body)
-	check(err)
+	checkm("getting archive list: reading HTTP response", err)
 
 	archives := ArchiveInfos{}
 	err = json.Unmarshal(b, &archives)
-	check(err)
+	fmt.Println(string(b))
+	checkm("getting archive list: unmarshaling response JSON", err)
 
 	return archives
 }
@@ -95,6 +97,13 @@ func mustPapertrailAPIToken() string {
 func check(err error) {
 	if err != nil {
 		fmt.Println(err)
+		os.Exit(1)
+	}
+}
+
+func checkm(msg string, err error) {
+	if err != nil {
+		fmt.Printf("%s: %s:\n", msg, err)
 		os.Exit(1)
 	}
 }
@@ -119,9 +128,10 @@ type ArchiveInfo struct {
 	DurationFormatted string        `json:"duration_formatted"`
 	End               time.Time     `json:"end"`
 	Filename          string        `json:"filename"`
-	Filesize          int           `json:"filesize"`
-	Start             time.Time     `json:"start"`
-	StartFormatted    string        `json:"start_formatted"`
+	Filesize          string        `json:"filesize"`
+	fsize             int
+	Start             time.Time `json:"start"`
+	StartFormatted    string    `json:"start_formatted"`
 }
 
 func (ai *ArchiveInfo) Overlaps(start, end time.Time) bool {
@@ -129,6 +139,19 @@ func (ai *ArchiveInfo) Overlaps(start, end time.Time) bool {
 	bs, be := start.UnixNano(), end.UnixNano()
 
 	return as <= be && ae >= bs
+}
+
+func (ai *ArchiveInfo) Size() (int, error) {
+	if ai.fsize > 0 {
+		return ai.fsize, nil
+	}
+
+	v, err := strconv.Atoi(ai.Filesize)
+	if err == nil {
+		ai.fsize = v
+	}
+
+	return v, err
 }
 
 type ArchiveInfos []*ArchiveInfo
@@ -149,12 +172,16 @@ func (a ArchiveInfos) Len() int {
 	return len(a)
 }
 
-func (a ArchiveInfos) Size() int {
+func (a ArchiveInfos) Size() (int, error) {
 	n := 0
 	for _, ai := range a {
-		n += ai.Filesize
+		sz, err := ai.Size()
+		if err != nil {
+			return 0, err
+		}
+		n += sz
 	}
-	return n
+	return n, nil
 }
 
 func ArchivesOverlap(start, end time.Time) ArchiveInfoMatchesFn {
