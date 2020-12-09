@@ -123,7 +123,7 @@ func runCp(cmd *cobra.Command, args []string) {
 	if dry {
 		fmt.Println("Dry run - these files would be downloaded...")
 		for _, a := range archives {
-			fmt.Printf("%s\t%d\n", a.Filename, a.Filesize)
+			fmt.Printf("%s\t%s\n", a.Filename, a.Filesize)
 		}
 		return
 

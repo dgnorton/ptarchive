@@ -38,7 +38,7 @@ func runLs(cmd *cobra.Command, args []string) {
 	archives := getArchiveList()
 
 	for _, a := range archives {
-		fmt.Printf("%s\t%d\n", a.Filename, a.Filesize)
+		fmt.Printf("%s\t%s\n", a.Filename, a.Filesize)
 	}
 }
 
@@ -61,7 +61,7 @@ func getArchiveList() ArchiveInfos {
 
 	archives := ArchiveInfos{}
 	err = json.Unmarshal(b, &archives)
-	fmt.Println(string(b))
+	//fmt.Println(string(b))
 	checkm("getting archive list: unmarshaling response JSON", err)
 
 	return archives
