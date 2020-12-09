@@ -34,7 +34,7 @@ func init() {
 	// lsCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
-func runLs(cmd *cobra.Command, args []string) {
+func runLs(_ *cobra.Command, _ []string) {
 	archives := getArchiveList()
 
 	for _, a := range archives {
@@ -53,8 +53,8 @@ func getArchiveList() ArchiveInfos {
 	c := &http.Client{}
 	resp, err := c.Do(req)
 	checkm("getting archive list: making HTTP request", err)
-	checkHTTP(resp, req)
-	defer resp.Body.Close()
+	checkHTTP(resp)
+	defer func() { _ = resp.Body.Close() }()
 
 	b, err := ioutil.ReadAll(resp.Body)
 	checkm("getting archive list: reading HTTP response", err)
@@ -89,7 +89,7 @@ func checkm(msg string, err error) {
 	}
 }
 
-func checkHTTP(resp *http.Response, req *http.Request) {
+func checkHTTP(resp *http.Response) {
 	if resp.StatusCode != http.StatusOK {
 		err := fmt.Errorf("http status: %v", resp.StatusCode)
 		check(err)

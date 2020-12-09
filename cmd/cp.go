@@ -68,13 +68,14 @@ func init() {
 
 }
 
-func runCp(cmd *cobra.Command, args []string) {
+func runCp(_ *cobra.Command, _ []string) {
 	if cpuprofile != "" {
 		f, err := os.Create(cpuprofile)
 		if err != nil {
 			log.Fatal(err)
 		}
-		pprof.StartCPUProfile(f)
+		err = pprof.StartCPUProfile(f)
+		checkm("starting CPU profile", err)
 		defer pprof.StopCPUProfile()
 	}
 
@@ -173,8 +174,8 @@ func getArchive(a *ArchiveInfo, pattern, substr, outPath string) error {
 	c := &http.Client{}
 	resp, err := c.Do(req)
 	check(err)
-	checkHTTP(resp, req)
-	defer resp.Body.Close()
+	checkHTTP(resp)
+	defer func() { _ = resp.Body.Close() }()
 
 	r := io.Reader(resp.Body)
 
@@ -197,7 +198,7 @@ func getArchive(a *ArchiveInfo, pattern, substr, outPath string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	_, err = io.Copy(f, r)
 
