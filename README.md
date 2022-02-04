@@ -16,7 +16,7 @@ Command line tool for downloading, unzipping, and filtering papertrail archives
 ### Install
 You'll need the Go tools (compiler) installed. Then run:
 ```
-go get github.com/dgnorton/ptarchive
+go install github.com/dgnorton/ptarchive@latest
 ```
 
 ### Usage
